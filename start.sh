@@ -1,3 +1,3 @@
 #!/bin/bash
 
-cd /opt/apm && meteor --allow-superuser --port 80
+node /apm/bundle/main.js
