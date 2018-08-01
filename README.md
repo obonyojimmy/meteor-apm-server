@@ -6,8 +6,9 @@ Most of the original features are working (like Slack alerts), but there is stil
 
 ## Get up and running with MUP
 
-The easiest way to get this server up and running is to use the recommended configuration with [MUP](https://github.com/zodern/meteor-up).
+The easiest way to get this server up and running is to use the recommended configuration with [MUP](https://github.com/zodern/meteor-up), see below.
 
+### Setup steps using Docker
 You can also use docker to spin up an instance pretty quick:
 
 ```
@@ -24,14 +25,18 @@ docker run -d --name meteor-apm-server \
 
 This can be useful for running an instance quickly in your own environment with orchestration.
 
-### Setup steps
+### Setup steps using MUP
+
+Keep in mind when using MUP: [your user account on the server must be sudoer without password](http://meteor-up.com/docs.html#ssh-based-authentication-with-sudo)
 
 1) Clone this repo and run `meteor npm install`.
 
 2) Copy [`mup-placeholder.js`](mup-placeholder.js) to `mup.js`. Replace the placeholder entries in the configuration with your configuration.
 
 
-3) Server configuration steps you need to verify prior to deployment:
+3) Copy [`settings-placeholder.json`](settings-placeholder.json) to `settings.json`. Change any settings as it suits your project (see *Meteor apm settings* section below)
+
+4) Server configuration steps you need to verify prior to deployment:
 
    a) This setup was tested using a server with at least 512MB of RAM.
 
@@ -39,11 +44,11 @@ This can be useful for running an instance quickly in your own environment with 
 
    c) In order for SSL configuration to succeed, you must set setup your DNS to point to your server IP address prior to deployment. Make sure to point both `apm.YOUR_DOMAIN.com` and `apm-engine.YOUR_DOMAIN.com` to the same server IP address.
 
-4) Run `npm run mup-deploy`.
+5) Run `npm run mup-deploy`.
 
-5) Visit your APM UI page at `https://apm.YOUR_DOMAIN.com`. Login with username `admin@admin.com`, password `admin`. **CHANGE YOUR PASSWORD FROM THIS DEFAULT**.
+6) Visit your APM UI page at `https://apm.YOUR_DOMAIN.com`. Login with username `admin@admin.com`, password `admin`. **CHANGE YOUR PASSWORD FROM THIS DEFAULT**.
 
-6) In the APM web UI, create a new app and pass the settings to your Meteor app:
+7) In the APM web UI, create a new app and pass the settings to your Meteor app (you can copy paste from the UI):
 
 `settings.json`
 ```
@@ -59,7 +64,7 @@ This can be useful for running an instance quickly in your own environment with 
 }
 ```
 
-7) Re-deploy your Meteor app, and you should see data populating in your APM UI in seconds.
+8) Re-deploy your Meteor app, and you should see data populating in your APM UI in seconds.
 
 ## Server Restarts
 
@@ -70,13 +75,15 @@ The custom nginx proxy configuration does not persist through a server restart. 
 
 As a baseline, a current Meteor application with ~500 DAL uses 0.7 GB for 7 days of APM data.
 
+[`public.apmEngineUrl`](settings.json) refers to the endpoint URL of your application (this allows to display good hints when creating the application)
+
 ## Configuration details:
 
 If you want to do custom configuration and server setup, here are items to be aware of:
 
 1) A mongo replica set is required. This is set up automatically for you when using the template MUP configuration script.
 
-2) If you are not getting APM data and see a [No 'Access-Control-Allow-Origin' header is present](#14) console error in your Meteor app, this is due to incorrect nginx proxy configuration. To confirm the issue, ssh into your server (`npx mup ssh`) and run `docker exec mup-nginx-proxy cat /etc/nginx/conf.d/default.conf`. Look for the upstream block for `apm-engine.YOUR_DOMAIN.com`, the entry should look like 
+2) If you are not getting APM data and see a [No 'Access-Control-Allow-Origin' header is present](https://github.com/lmachens/meteor-apm-server/issues/14) console error in your Meteor app, this is due to incorrect nginx proxy configuration. To confirm the issue, ssh into your server (`npx mup ssh`) and run `docker exec mup-nginx-proxy cat /etc/nginx/conf.d/default.conf`. Look for the upstream block for `apm-engine.YOUR_DOMAIN.com`, the entry should look like 
 ```
 upstream apm-engine.YOUR_DOMAIN.com {
     # YOUR_APP
