@@ -1,19 +1,18 @@
-FROM strictlyskyler/meteor-environment:1.1.0
-MAINTAINER Skyler Brungardt <skyler.brungardt@gmail.com>
+FROM node:8.16.0
 
-ADD . /opt/apm
+ENV APP_DIR=/meteor
+# Install as root (otherwise node-gyp gets compiled as nobody)
+USER root
+WORKDIR $APP_DIR/bundle/programs/server/
 
-WORKDIR /opt/apm
+# Copy bundle and scripts to the image APP_DIR
+ADD . $APP_DIR
 
-RUN apt-get update \
- && apt-get install -y locales
-RUN locale-gen en_US.UTF-8 && localedef -i en_GB -f UTF-8 en_US.UTF-8
-RUN meteor npm i
-RUN TOOL_NODE_FLAGS="--max-old-space-size=4096" \
-  meteor build --directory /apm --allow-superuser
+# the install command for debian
+RUN echo "Installing the node modules..." \
+  && npm install -g node-gyp \
+  && npm install --production --silent
 
-WORKDIR /apm/bundle/programs/server
-
-RUN npm i
-
-ADD ./start.sh /start.sh
+# start the app
+WORKDIR /meteor/bundle
+CMD ["node","main.js"]

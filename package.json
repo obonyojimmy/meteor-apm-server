@@ -1,25 +1,24 @@
 {
   "name": "meteor-apm-server",
   "version": "1.3.0",
-  "description": "Get meteor-apm-server up and running with a stable configuration using MUP",
+  "description": "Get meteor-apm-server up and running with a stable configuration using Docker",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "mup-deploy": "npx mup setup && npx mup deploy",
-    "mup-logs": "npx mup logs",
-    "mup-restart": "npx mup restart"
+    "build": "meteor build --architecture=os.linux.x86_64 --server-only --directory ./build",
+    "docker-build": "docker build -t asosnovskiy/meteor-apm-server:1.3.0 -f ./Dockerfile ./build/"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lmachens/meteor-apm-server.git"
+    "url": "git+https://github.com/asosnovskiy/meteor-apm-server.git"
   },
   "author": "lmachens",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/lmachens/meteor-apm-server/issues"
+    "url": "https://github.com/asosnovskiy/meteor-apm-server/issues"
   },
-  "homepage": "https://github.com/lmachens/meteor-apm-server#readme",
+  "homepage": "https://github.com/asosnovskiy/meteor-apm-server#readme",
   "dependencies": {
     "@babel/runtime": "^7.0.0-beta.44",
     "async": "^2.6.0",
@@ -70,7 +69,6 @@
     "zeroclipboard": "^2.3.0"
   },
   "devDependencies": {
-    "mup": "^1.4.5",
     "prettier": "^1.12.1"
   }
 }
