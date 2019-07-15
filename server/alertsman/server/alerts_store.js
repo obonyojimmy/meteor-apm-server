@@ -1,22 +1,24 @@
 import Alert from './alert';
 import { EventEmitter } from 'events';
-import _ from 'lodash';
+import { Operations } from './operations';
 
 const debug = require('debug')('alertsman:altersStore');
 
 export default class AlertsStore extends EventEmitter {
-  constructor(oplog) {
+  constructor(strategy) {
     super();
-    this.oplog = oplog;
     this.reset = this.reset.bind(this);
-    this.alerts = {};
+    this.alerts = new Map();
     this.resetInterval = 1000 * 60 * 60; // Reset alerts ever hour
 
     this.alertsCol = Alerts;
+
+    this._strategy = strategy;
+    this._strategy.on('operation', (data) => this.onOperationReceived(data));
   }
 
   load() {
-    const promise = this.watchOplog();
+    const promise = this._strategy.run();
     this.reset();
     this._resetHandler = setInterval(this.reset, this.resetInterval);
     return promise;
@@ -28,14 +30,14 @@ export default class AlertsStore extends EventEmitter {
     debug(`reset and load ${alerts.length} alerts`);
 
     // disable exisitng alerts
-    _.each(this.alerts, alert => {
+    for (const alert of this.alerts.values()) {
       this.emit('disabled', new Alert(alert));
-    });
-    this.alerts = {};
+    }
+    this.alerts.clear();
 
     // enable loaded alerts
-    for (let a of alerts) {
-      this.alerts[a._id] = a;
+    for (const a of alerts) {
+      this.alerts.set(a._id, a);
       this.emit('enabled', new Alert(a));
     }
   }
@@ -44,74 +46,23 @@ export default class AlertsStore extends EventEmitter {
     clearTimeout(this._resetHandler);
   }
 
-  watchOplog() {
-    const promise = this.oplog.tail().then(() => {
-      this.oplog.on('op', data => {
-        let op = {};
+  async onOperationReceived({ operation, alertId, lastCheckedDate }) {
+    debug(`new alerts update type=${operation} id=${alertId}`);
 
-        if (data.op === 'i') {
-          op.alertId = data.o._id;
-          op.operation = 'insert';
-          op.newAlert = data.o;
-        } else if (data.op === 'd') {
-          op.alertId = data.o._id;
-          op.operation = 'delete';
-        } else if (data.op === 'u') {
-          op.alertId = data.o2._id;
-          const update = data.o;
-
-          for (let key in update) {
-            if (!update.hasOwnProperty(key)) {
-              continue;
-            }
-
-            if (key === '$set') {
-              for (let field in update[key]) {
-                if (!update[key].hasOwnProperty(field)) {
-                  continue;
-                }
-
-                if (field === 'meta.enabled') {
-                  if (update[key][field] === true) {
-                    op.operation = 'setEnabled';
-                  } else {
-                    op.operation = 'setDisabled';
-                  }
-                } else if (field === 'lastCheckedDate') {
-                  op.operation = 'updateLastCheckedDate';
-                  op.lastCheckedDate = update[key][field];
-                } else {
-                  op.operation = 'other';
-                  break;
-                }
-              }
-            } else {
-              op.operation = 'other';
-              break;
-            }
-          }
-        }
-        this.onOplogOp(op);
-      });
-    });
-
-    return promise;
-  }
-
-  async onOplogOp(op) {
-    debug(`new alerts update type=${op.operation} id=${op.alertId}`);
-    switch (op.operation) {
-      case 'updateLastCheckedDate':
-        if (this.alerts[op.alertId]) {
-          this.alerts[op.alertId].lastCheckedDate = op.lastCheckedDate;
-          this.emit('disabled', new Alert(this.alerts[op.alertId]));
-          this.emit('enabled', new Alert(this.alerts[op.alertId]));
+    switch (operation) {
+      case Operations.UpdateLastCheckedDate: {
+        const alert = this.alerts.get(alertId);
+        if (alert) {
+          alert.lastCheckedDate = lastCheckedDate;
+          this.emit('disabled', new Alert(alert));
+          this.emit('enabled', new Alert(alert));
         }
         break;
+      }
       default:
-        const selecter = { _id: op.alertId };
+        const selecter = { _id: alertId };
         const rawAlert = await this.alertsCol.findOne(selecter);
-        const cachedAlert = this.alerts[op.alertId];
+        const cachedAlert = this.alerts.get(alertId);
         // If the alert removed or disabled we need to branch it out.
         if (!rawAlert || !rawAlert.meta.enabled) {
           // If there is a cached alert already. Simply disable it
@@ -129,7 +80,7 @@ export default class AlertsStore extends EventEmitter {
         }
 
         // Assign the new rawAlert to cache and enable it
-        this.alerts[op.alertId] = rawAlert;
+        this.alerts.set(alertId, rawAlert);
         this.emit('enabled', new Alert(rawAlert));
     }
   }
@@ -167,6 +118,8 @@ export default class AlertsStore extends EventEmitter {
   }
 
   close() {
+    this._strategy.stop();
+    this._strategy.removeAllListeners();
     this.removeAllListeners();
   }
 }

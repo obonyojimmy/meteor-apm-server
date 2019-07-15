@@ -5,11 +5,11 @@ import * as urlShortener from './url_shortener';
 import AlertsStore from './alerts_store';
 import Messenger from './messenger';
 import MetricsStore from './metrics/store';
-import MongoOplog from 'mongo-oplog';
 import RuleEngine from './rules/engine';
 import TickManager from './tick_manager';
-import parseMongoUrl from 'parse-mongo-url';
 import { processAlone } from './utils';
+import OplogStrategy from './watchStrategies/oplog';
+import PollingStrategy from './watchStrategies/polling';
 
 const debug = require('debug')('alertsman:index');
 const { info, error } = console;
@@ -21,13 +21,20 @@ const {
   MAIL_URL,
   TICK_TRIGGER_INTERVAL = 1000 * 10,
   MESSENGER_LOGGING_ONLY,
-  GOOGLE_DEV_KEY
+  GOOGLE_DEV_KEY,
+  POLLING_DB_INTERVAL = 1000 * 5
 } = process.env;
 
-const parsedUrl = parseMongoUrl(MONGO_URL);
-const oplogFilterNs = `${parsedUrl.dbName}.alerts`;
-const oplogConn = MongoOplog(MONGO_OPLOG_URL, { ns: oplogFilterNs });
-const alertsStore = new AlertsStore(oplogConn);
+let alertsStoreStrategy;
+if (MONGO_URL && MONGO_OPLOG_URL) {
+  alertsStoreStrategy = new OplogStrategy(MONGO_URL, MONGO_OPLOG_URL);
+} else if (MONGO_URL) {
+  alertsStoreStrategy = new PollingStrategy({ pollingInterval: parseInt(POLLING_DB_INTERVAL, 10) });
+} else {
+  throw new Error('You must provide at least MONGO_URL env variable');
+}
+
+const alertsStore = new AlertsStore(alertsStoreStrategy);
 
 const tickManager = new TickManager({
   triggerInterval: parseInt(TICK_TRIGGER_INTERVAL, 10)
