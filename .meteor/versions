@@ -56,6 +56,7 @@ kadira:blaze-layout@2.3.0
 kadira:flow-router@2.12.1
 kadira:login-state@1.3.1
 keiths:octicons@1.2.2
+lamhieu:meteorx@2.0.1
 launch-screen@1.2.0
 less@2.8.0
 livedata@1.0.18
@@ -74,7 +75,7 @@ meteor-developer-config-ui@1.0.1
 meteor-developer-oauth@1.2.1
 meteorhacks:customer-io@1.1.0
 meteorhacks:flow-components@0.0.42
-meteorhacks:meteorx@1.4.1
+meteorhacks:meteorx@1.4.3
 meteorhacks:subs-manager@1.6.4
 meteorhacks:unblock@1.1.0
 minifier-css@1.5.0
