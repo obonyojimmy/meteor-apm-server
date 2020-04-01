@@ -6,6 +6,7 @@
     "test": "tests"
   },
   "scripts": {
+    "start": "meteor run --port ${PORT:-4000} --settings settings.json",
     "build": "meteor build ../apn-build --directory --architecture os.linux.x86_64",
     "mup-deploy": "npx mup setup && npx mup deploy",
     "mup-logs": "npx mup logs",
