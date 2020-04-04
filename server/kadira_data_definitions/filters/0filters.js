@@ -2,15 +2,15 @@ var zlib = Npm.require('zlib');
 
 KadiraDataFilters = {};
 
-KadiraDataFilters.rateFilterForBreakdown = function(rateFields) {
+KadiraDataFilters.rateFilterForBreakdown = function (rateFields) {
   var rateFieldsMap = {};
-  rateFields.forEach(function(field) {
+  rateFields.forEach(function (field) {
     rateFieldsMap[field] = true;
   });
 
-  return function(data, args) {
+  return function (data, args) {
     var divideAmount = rangeToMinutes(args.range);
-    return data.map(function(item) {
+    return data.map(function (item) {
       if (rateFieldsMap[args.sortBy]) {
         item.sortedValue /= divideAmount;
       }
@@ -23,13 +23,13 @@ KadiraDataFilters.rateFilterForBreakdown = function(rateFields) {
   };
 };
 
-KadiraDataFilters.rateFilterForCharts = function(rateFields) {
-  return function(data, args) {
+KadiraDataFilters.rateFilterForCharts = function (rateFields) {
+  return function (data, args) {
     var resolution = args.query['value.res'];
 
     var divideAmount = getTimeInterval(resolution) / (1000 * 60);
-    return data.map(function(item) {
-      rateFields.forEach(function(field) {
+    return data.map(function (item) {
+      rateFields.forEach(function (field) {
         if (item[field]) {
           item[field] /= divideAmount;
         }
@@ -39,11 +39,11 @@ KadiraDataFilters.rateFilterForCharts = function(rateFields) {
   };
 };
 
-KadiraDataFilters.divideByRange = function(divideFields) {
-  return function(data, args) {
+KadiraDataFilters.divideByRange = function (divideFields) {
+  return function (data, args) {
     var divideAmount = rangeToMinutes(args.range);
-    return data.map(function(item) {
-      divideFields.forEach(function(field) {
+    return data.map(function (item) {
+      divideFields.forEach(function (field) {
         if (item[field]) {
           item[field] /= divideAmount;
         }
@@ -53,14 +53,14 @@ KadiraDataFilters.divideByRange = function(divideFields) {
   };
 };
 
-KadiraDataFilters.roundTo = function(keys, decimalPoints) {
+KadiraDataFilters.roundTo = function (keys, decimalPoints) {
   if (!(keys instanceof Array)) {
     keys = [keys];
   }
 
-  return function(data) {
-    return data.map(function(item) {
-      keys.forEach(function(key) {
+  return function (data) {
+    return data.map(function (item) {
+      keys.forEach(function (key) {
         if (item[key]) {
           item[key] = parseFloat(item[key].toFixed(decimalPoints));
         }
@@ -70,9 +70,9 @@ KadiraDataFilters.roundTo = function(keys, decimalPoints) {
   };
 };
 
-KadiraDataFilters.toPct = function(decimalPoints) {
-  return function(data) {
-    return data.map(function(item) {
+KadiraDataFilters.toPct = function (decimalPoints) {
+  return function (data) {
+    return data.map(function (item) {
       item.pcpu = parseFloat(item.pcpu.toFixed(decimalPoints));
       return item;
     });
@@ -80,7 +80,7 @@ KadiraDataFilters.toPct = function(decimalPoints) {
 };
 
 KadiraDataFilters.decriptTrace = function decriptTrace(data) {
-  var decriptedData = data.map(function(item) {
+  var decriptedData = data.map(function (item) {
     if (item.compressed) {
       return Meteor.wrapAsync(_unzipTrace)(item);
     } else {
@@ -92,14 +92,14 @@ KadiraDataFilters.decriptTrace = function decriptTrace(data) {
 };
 
 function _unzipTrace(trace, callback) {
-  zlib.unzip(trace.events.value(true), function(err, eventJsonString) {
+  zlib.unzip(trace.events.value(true), function (err, eventJsonString) {
     if (err) {
       callback(err);
     } else {
       var events = JSON.parse(eventJsonString.toString());
       // converting at dataString to date object
       // while at the compression, date object will became a date string
-      trace.events = events.map(function(e) {
+      trace.events = events.map(function (e) {
         if (e.at) {
           e.at = new Date(e.at);
         }
@@ -111,8 +111,8 @@ function _unzipTrace(trace, callback) {
   });
 }
 
-KadiraDataFilters.addZeros = function(metrics) {
-  return function(data, args) {
+KadiraDataFilters.addZeros = function (metrics) {
+  return function (data, args) {
     var query = args.query;
     var startTime = new Date(query['value.startTime']['$gte']).getTime();
     var endTime = new Date(query['value.startTime']['$lt']).getTime();
@@ -152,7 +152,7 @@ KadiraDataFilters.addZeros = function(metrics) {
       }
 
       var unSortedHostsData = _.flatten(_.values(newHostsData), true);
-      newData = _.sortBy(unSortedHostsData, function(d) {
+      newData = _.sortBy(unSortedHostsData, function (d) {
         return d._id.time.getTime();
       });
     } else {
@@ -182,7 +182,7 @@ KadiraDataFilters.addZeros = function(metrics) {
   };
 };
 
-KadiraDataFilters._addZeroPoints = function(newData, args) {
+KadiraDataFilters._addZeroPoints = function (newData, args) {
   args.timeDiff = args.addtoFront ? -args.timeDiff : args.timeDiff;
   for (var j = 1; j <= args.zeroPointsCount; j++) {
     var newPointTime = new Date(args.timeStamp + args.timeDiff * j);
@@ -192,7 +192,7 @@ KadiraDataFilters._addZeroPoints = function(newData, args) {
     }
 
     /* jshint ignore:start */
-    args.metrics.forEach(function(metric) {
+    args.metrics.forEach(function (metric) {
       point[metric] = 0;
     });
 
@@ -210,7 +210,7 @@ KadiraDataFilters._addZeroPoints = function(newData, args) {
 function getHostsData(data) {
   var hostsData = {};
 
-  data.forEach(function(d) {
+  data.forEach(function (d) {
     var host = d._id.host;
     if (host) {
       hostsData[host] = hostsData[host] || [];
@@ -296,16 +296,17 @@ function fillEndPoints(data, newData, args) {
   }
 }
 
-KadiraDataFilters.convertObjectToId = function(data) {
-  data.forEach(function(d) {
+KadiraDataFilters.convertObjectToId = function (data) {
+  // console.log(data)
+  data.forEach(function (d) {
     d._id = Random.id();
   });
   return data;
 };
 
-KadiraDataFilters.limitSamples = function(limit) {
-  return function(data) {
-    data.forEach(function(d) {
+KadiraDataFilters.limitSamples = function (limit) {
+  return function (data) {
+    data.forEach(function (d) {
       d.samples.splice(limit);
     });
     return data;

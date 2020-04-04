@@ -1,5 +1,5 @@
 Meteor.methods({
-  'kadiraData.fetchTraces': function(dataKey, args) {
+  'kadiraData.fetchTraces': function (dataKey, args) {
     check(dataKey, String);
     check(args, Object);
     this.unblock();
@@ -12,6 +12,8 @@ Meteor.methods({
       throw new Meteor.Error('404', message);
     }
 
+    console.log(definition)
+    // console.log(args)
     var query = {};
     if (args.range) {
       // normal list query
@@ -29,14 +31,20 @@ Meteor.methods({
       query = args.query;
     }
 
+    console.log(query)
+
     var newArgs = _.extend(_.clone(args), { query: query });
     var pipes = definition.pipeHandler(newArgs);
     const db = MongoInternals.defaultRemoteCollectionDriver().mongo.db;
     var coll = db.collection(definition.collection);
     var data = Meteor.wrapAsync(coll.aggregate, coll)(pipes);
-
-    definition.filters.forEach(function(filter) {
-      data = filter(_.clone(data));
+    // console.log(data)
+    console.log(definition)
+    definition.filters.forEach(function (filter) {
+      console.log('FOREACH CALL')
+      const dt = filter(_.clone(data));
+      console.log('forEach', dt)
+      data = dt
     });
 
     return data;

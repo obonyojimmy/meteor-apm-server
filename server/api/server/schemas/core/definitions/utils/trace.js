@@ -6,7 +6,8 @@ const inflate = zlib.inflate;
 // inflate trace events with 'zlib'
 export async function inflateEvents(doc) {
   if (doc && doc.compressed) {
-    const inflated = await inflate(doc.events.buffer);
+    console.log(doc)
+    const inflated = await inflate(Buffer.from(doc.events.buffer));
     doc.events = inflated.toString();
   }
   return doc;

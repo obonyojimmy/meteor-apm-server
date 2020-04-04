@@ -1,0 +1,28 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  // Debuging Meteor - https://github.com/Microsoft/vscode-recipes/tree/master/meteor
+  // Debug Recipes - https://code.visualstudio.com/docs/nodejs/debugging-recipes
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Server:Node",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "debug"
+      ],
+      "env": {
+        "MONGO_URL": "mongodb://localhost:27017/apn_server",
+        "PORT": "4000",
+        "MAIL_URL": "smtp://jimmy@localhost:25/"
+      },
+      "outputCapture": "std",
+      "port": 9229,
+      "timeout": 300000
+    }
+  ]
+}
