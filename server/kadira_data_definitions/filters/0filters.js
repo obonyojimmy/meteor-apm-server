@@ -80,6 +80,7 @@ KadiraDataFilters.toPct = function (decimalPoints) {
 };
 
 KadiraDataFilters.decriptTrace = function decriptTrace(data) {
+  console.log(data)
   var decriptedData = data.map(function (item) {
     if (item.compressed) {
       return Meteor.wrapAsync(_unzipTrace)(item);
@@ -297,10 +298,14 @@ function fillEndPoints(data, newData, args) {
 }
 
 KadiraDataFilters.convertObjectToId = function (data) {
-  // console.log(data)
-  data.forEach(function (d) {
-    d._id = Random.id();
-  });
+  console.log(data)
+
+  if (data && Array.isArray(data)) {
+    data.forEach(function (d) {
+      d._id = Random.id();
+    });
+  }
+
   return data;
 };
 

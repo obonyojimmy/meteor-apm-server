@@ -12,7 +12,7 @@ Meteor.methods({
       throw new Meteor.Error('404', message);
     }
 
-    console.log(definition)
+    // console.log(definition)
     // console.log(args)
     var query = {};
     if (args.range) {
