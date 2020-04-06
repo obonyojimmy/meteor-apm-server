@@ -25,7 +25,7 @@ function getFromHeaders(req) {
 
 AppInfo.getFromErrors = getFromErrors;
 function getFromErrors(req) {
-  if (req.body && req.body.errors instanceof Array) {
+  if (req.body && Array.isArray(req.body.errors)) {
     var error = req.body.errors[0];
     if (error && error.appId) {
       return { appId: error.appId };
